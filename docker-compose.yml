@@ -1,0 +1,53 @@
+version: "3"
+
+services:
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./docker/nginx/:/etc/nginx/conf.d/
+    networks:
+      - front
+      - backend
+    ports:
+      - "443:443"
+
+  apache:
+    build: ./docker/apache
+    volumes:
+      - ./:/var/www/
+      - ./docker/apache/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/apache/:/etc/apache2/sites-available/
+    networks:
+      - backend
+
+  mysqldb:
+    image: "mysql:5.7"
+    volumes:
+      - ./docker/db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dev_db
+      MYSQL_USER: dev_db
+      MYSQL_PASSWORD: 12345678
+    ports:
+      - "3334:3306"
+    networks:
+      - backend
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      - PMA_HOST=mysqldb
+      - PMA_USER=dev_db
+      - PMA_PASSWORD=12345678
+    volumes:
+      - /sessions
+    networks:
+      - backend
+
+networks:
+  front:
+    external:
+      name: front
+  backend:
